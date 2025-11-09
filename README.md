@@ -65,7 +65,7 @@ npm start
 - Users
   - `POST /signup`: create a new user
   - `POST /login`: log in existing user
-  - `GET /check_session:` verify user session
+  - `GET /check_session`: verify user session
   - `DELETE /logout`: log out user
   - `GET /users`: list all users
   - `GET /users/<id>`: get a specific user
@@ -91,6 +91,18 @@ npm start
 ---
 
 ## Frontend
+
+### State Management (`src/context/user.js`)
+- `UserContext.js` contains the React Context for global state and authentication.
+- Provides:
+  - `user` and `setUser` – track the logged-in user
+  - `hospitals` and `departments` – lists fetched from the backend
+  - `fetchHospitals()` and `fetchDepartments()` – methods to populate state
+- Wrapped around the app in `App.js` so all components can access user, hospital, and department data.
+- Used by components such as `PatientForm.js`, `Signup.js`, and `Login.js` for:
+  - Protecting routes
+  - Populating dropdowns with hospitals and departments
+  - Managing session state
 
 ### Routes (React Router)
 - `/` - Home page with instructions
