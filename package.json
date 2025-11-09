@@ -1,0 +1,8 @@
+{
+  "dependencies": {
+    "formik": "^2.4.8",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "yup": "^1.7.1"
+  }
+}

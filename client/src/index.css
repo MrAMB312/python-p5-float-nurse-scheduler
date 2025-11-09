@@ -1,7 +1,146 @@
+/* Root variables for color palette */
 :root {
-  --bg: #282c34;
-  --header: #fff;
-  --link: #61dafb;
-  --text: hsla(0, 0%, 100%, 0.88);
+  --primary: #6aa0c8;     /* Pale blue */
+  --secondary: #f8f9fa;   /* Very light gray for backgrounds */
+  --accent: #374785;       /* Darker blue for headers, nav */
+  --text: #333;            /* Primary text color */
+  --error: #e63946;        /* Error color for form validation */
+  --border: #ccc;          /* Neutral border color */
+  --button-hover: #8bb8d0; /* Slightly darker shade for hover */
 }
 
+/* Reset & base styles */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+  background-color: var(--secondary);
+  color: var(--text);
+  line-height: 1.6;
+  padding: 20px;
+}
+
+/* Headings */
+h1, h2, h3 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+}
+
+/* Links */
+a {
+  color: var(--primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+/* Navigation lists */
+nav ul {
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin: 10px;
+  padding: 0;
+}
+
+nav li {
+  display: inline-block;
+}
+
+/* Buttons */
+button {
+  background-color: var(--primary);
+  color: #fff;
+  border: none;
+  padding: 8px 16px;
+  margin: 5px 0;
+  cursor: pointer;
+  border-radius: 6px;
+  font-weight: 600;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: var(--button-hover);
+}
+
+button:disabled {
+  background-color: #ccc;
+  cursor: not-allowed;
+}
+
+/* Forms */
+form {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  max-width: 500px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+label {
+  display: block;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 1rem;
+}
+
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 4px var(--primary);
+}
+
+/* Error messages */
+p[style*="color: red"], .error {
+  color: var(--error);
+  font-size: 0.875rem;
+  margin-top: -8px;
+  margin-bottom: 12px;
+}
+
+/* Lists */
+ul {
+  padding-left: 20px;
+}
+
+li {
+  margin-bottom: 8px;
+}
+
+/* Containers for spacing */
+.container {
+  max-width: 900px;
+  margin: auto;
+  padding: 20px;
+}
+
+/* Cards for content blocks (like detail views) */
+.card {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 8px rgba(0,0,0,0.08);
+}
+
+input::placeholder {
+  color: #000;      /* black placeholder */
+  font-style: normal; /* normal font style, not italic */
+}
