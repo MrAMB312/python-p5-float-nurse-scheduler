@@ -38,24 +38,28 @@ function DepartmentForm() {
   });
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <h2>Add Department</h2>
-      
-      <label>
-        Name:
-        <input
-          name="name"
-          placeholder="Department Name"
-          value={formik.values.name}
-          onChange={formik.handleChange}
-        />
-      </label>
-      {formik.errors.name && <p className="error">{formik.errors.name}</p>}
+    <div className="container">
+      <div className="card">
+        <form onSubmit={formik.handleSubmit}>
+          <h2>Add Department</h2>
+          
+          <label>
+            Name:
+            <input
+              name="name"
+              placeholder="Department Name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+            />
+          </label>
+          {formik.errors.name && <p className="error">{formik.errors.name}</p>}
 
-      <button type="submit">Add Department</button>
-      <br />
-      <button type="button" onClick={() => navigate("/")}>Back to Home</button>
-    </form>
+          <button type="submit">Add Department</button>
+          <br />
+          <button type="button" onClick={() => navigate("/")}>Back to Home</button>
+        </form>
+      </div>
+    </div>
   );
 }
 

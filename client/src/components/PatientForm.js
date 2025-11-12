@@ -1,13 +1,19 @@
-import React, { useContext, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/user";
 import { useFormik } from "formik";
 import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 
 function PatientForm() {
-  const { user, hospitals, departments, fetchHospitals, fetchDepartments } =
+  const { user, setUser, hospitals, departments, fetchHospitals, fetchDepartments } =
     useContext(UserContext);
   const navigate = useNavigate();
+
+  const [showHospitalForm, setShowHospitalForm] = useState(false);
+  const [showDepartmentForm, setShowDepartmentForm] = useState(false);
+  const [newHospitalName, setNewHospitalName] = useState("");
+  const [newHospitalPhone, setNewHospitalPhone] = useState("");
+  const [newDepartmentName, setNewDepartmentName] = useState("");
 
   useEffect(() => {
     if (user) {
@@ -39,13 +45,66 @@ function PatientForm() {
         body: JSON.stringify(values),
       })
         .then((r) => r.json())
-        .then((data) => {
-          alert(`Patient ${data.name} added!`);
+        .then((newPatient) => {
+          alert(`Patient ${newPatient.name} added!`);
+
+          const updatedHospitals = user.hospitals.map((h) =>
+            h.id === newPatient.hospital.id
+              ? { ...h, patients: [...(h.patients || []), newPatient] }
+              : h
+          );
+
+          const updatedDepartments = user.departments.map((d) => 
+            d.id === newPatient.department.id
+              ? { ...d, patients: [...(d.patients || []), newPatient] }
+              : d
+          );
+
+          setUser({ ...user, hospitals: updatedHospitals, departments: updatedDepartments });
+
           resetForm();
           navigate("/");
-        });
+        })
+        .catch((err) => console.error("Failed to find patient:", err));
     },
   });
+
+  const handleAddHospital = () => {
+    fetch("http://localhost:5555/hospitals", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name: newHospitalName, phone_number: newHospitalPhone }),
+    })
+      .then((r) => r.json())
+      .then((h) => {
+        alert(`Hospital "${h.name}" added!`);
+        fetchHospitals();
+        setNewHospitalName("");
+        setNewHospitalPhone("");
+        setShowHospitalForm(false);
+        formik.setFieldValue("hospital_id", h.id);
+      })
+      .catch((err) => console.error(err));
+  };
+
+  const handleAddDepartment = () => {
+    fetch("http://localhost:5555/departments", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "include",
+      body: JSON.stringify({ name: newDepartmentName }),
+    })
+      .then((r) => r.json())
+      .then((d) => {
+        alert(`Department "${d.name}" added!`);
+        fetchDepartments();
+        setNewDepartmentName("");
+        setShowDepartmentForm(false);
+        formik.setFieldValue("department_id", d.id);
+      })
+      .catch((err) => console.error(err));
+  };
 
   if (!user) return <p className="container card">Please log in to add patients.</p>;
 
@@ -81,18 +140,37 @@ function PatientForm() {
 
           <label>
             Hospital:
-            <select
-              name="hospital_id"
-              value={formik.values.hospital_id}
-              onChange={formik.handleChange}
-            >
-              <option value="">Select Hospital</option>
-              {hospitals.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
-                </option>
-              ))}
-            </select>
+            {showHospitalForm ? (
+              <div className="inline-form">
+                <input
+                  placeholder="Hospital Name"
+                  value={newHospitalName}
+                  onChange={(e) => setNewHospitalName(e.target.value)}
+                />
+                <input
+                  placeholder="Phone Number"
+                  value={newHospitalPhone}
+                  onChange={(e) => setNewHospitalPhone(e.target.value)}
+                />
+                <button type="button" onClick={handleAddHospital}>Save Hospital</button>
+              </div>
+            ) : (
+              <select
+                name="hospital_id"
+                value={formik.values.hospital_id}
+                onChange={formik.handleChange}
+              >
+                <option value="">Select Hospital</option>
+                {hospitals.map((h) => (
+                  <option key={h.id} value={h.id}>
+                    {h.name}
+                  </option>
+                ))}
+              </select>
+            )}
+            <button type="button" onClick={() => setShowHospitalForm(!showHospitalForm)}>
+              {showHospitalForm ? "Cancel" : "Add New Hospital"}
+            </button>
           </label>
           {formik.errors.hospital_id && (
             <p className="error">{formik.errors.hospital_id}</p>
@@ -100,22 +178,38 @@ function PatientForm() {
 
           <label>
             Department:
-            <select
-              name="department_id"
-              value={formik.values.department_id}
-              onChange={formik.handleChange}
-            >
-              <option value="">Select Department</option>
-              {departments.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.name}
-                </option>
-              ))}
-            </select>
+            {showDepartmentForm ? (
+              <div className="inline-form">
+                <input
+                  placeholder="Department Name"
+                  value={newDepartmentName}
+                  onChange={(e) => setNewDepartmentName(e.target.value)}
+                />
+                <button type="button" onClick={handleAddDepartment}>Save Department</button>
+              </div>
+            ) : (
+              <select
+                name="department_id"
+                value={formik.values.department_id}
+                onChange={formik.handleChange}
+              >
+                <option value="">Select Department</option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            <button type="button" onClick={() => setShowDepartmentForm(!showDepartmentForm)}>
+              {showDepartmentForm ? "Cancel" : "Add New Department"}
+            </button>
           </label>
           {formik.errors.department_id && (
             <p className="error">{formik.errors.department_id}</p>
           )}
+          <br />
 
           <button type="submit">Add Patient</button>
           <br />

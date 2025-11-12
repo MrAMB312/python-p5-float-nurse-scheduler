@@ -23,6 +23,7 @@ function Home() {
         <div className="card">
           <h1>Welcome to the Nurse Scheduler!</h1>
           <p>Please log in or sign up to continue.</p>
+          <br />
 
           {!selectedForm && (
             <div>
@@ -47,13 +48,10 @@ function Home() {
     <div className="container">
       <div className="card">
         <h1>Welcome, {user.name}!</h1>
-        <p>Manage patients, hospitals, and departments using the links below.</p>
-
+        <p>View patients by hospital or department. Add new patients, hospitals, or departments.</p>
         <nav>
           <ul>
             <li><Link to="/add-patient">Add Patient</Link></li>
-            <li><Link to="/add-hospital">Add Hospital</Link></li>
-            <li><Link to="/add-department">Add Department</Link></li>
             <li><Link to="/hospitals">View Hospitals</Link></li>
             <li><Link to="/departments">View Departments</Link></li>
           </ul>

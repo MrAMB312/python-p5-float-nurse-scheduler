@@ -1,25 +1,16 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useContext } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { UserContext } from "../context/user";
 
 function DepartmentDetail() {
   const { id } = useParams();
-  const { user } = useContext(UserContext);
-  const [department, setDepartment] = useState(null);
+  const { user, departments } = useContext(UserContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user) {
-      fetch(`http://localhost:5555/departments/${id}`, {
-        credentials: "include",
-      })
-        .then((r) => r.json())
-        .then((data) => setDepartment(data))
-        .catch((err) => console.error("Failed to fetch department:", err));
-    }
-  }, [id, user]);
+  if (!user) return <p className="container card">Please log in to see patients.</p>;
 
-  if (!user) return <p className="container card">Please log in to see departments.</p>;
+  const department = (departments || []).find((d) => d.id === parseInt(id));
+
   if (!department) return <p className="container card">Department not found.</p>;
 
   const patients = department.patients || [];
@@ -43,7 +34,7 @@ function DepartmentDetail() {
             ))}
           </ul>
         ) : (
-          <p>No patients found.</p>
+          <p>No patients found for this department.</p>
         )}
 
         <button type="button" onClick={() => navigate("/departments")}>

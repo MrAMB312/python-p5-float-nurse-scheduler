@@ -24,16 +24,26 @@ class UserSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("userbyid", values=dict(user_id="<id>")),
-            "collection": ma.URLFor("users"),
-        }
-    )
 
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
+
+
+class PatientSchema(ma.SQLAlchemySchema):
+    class Meta:
+        model = Patient
+        load_instance = True
+
+    id = ma.auto_field()
+    name = ma.auto_field()
+    date_of_birth = ma.Date()
+    hospital = ma.Nested("HospitalSchema", only=("id", "name"))
+    department = ma.Nested("DepartmentSchema", only=("id", "name"))
+
+
+patient_schema = PatientSchema()
+patients_schema = PatientSchema(many=True)
 
 
 class HospitalSchema(ma.SQLAlchemySchema):
@@ -44,15 +54,6 @@ class HospitalSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     name = ma.auto_field()
     phone_number = ma.auto_field()
-    patients = ma.Nested(
-        "PatientSchema", many=True, exclude=("hospital", "department")
-    )
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("hospitalbyid", values=dict(hospital_id="<id>")),
-            "collection": ma.URLFor("hospitals"),
-        }
-    )
 
 
 hospital_schema = HospitalSchema()
@@ -66,41 +67,10 @@ class DepartmentSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
-    patients = ma.Nested(
-        "PatientSchema", many=True, exclude=("department", "hospital")
-    )
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("departmentbyid", values=dict(department_id="<id>")),
-            "collection": ma.URLFor("departments"),
-        }
-    )
 
 
 department_schema = DepartmentSchema()
 departments_schema = DepartmentSchema(many=True)
-
-
-class PatientSchema(ma.SQLAlchemySchema):
-    class Meta:
-        model = Patient
-        load_instance = True
-
-    id = ma.auto_field()
-    name = ma.auto_field()
-    date_of_birth = ma.Date()
-    hospital = ma.Nested("HospitalSchema", only=("id", "name"))
-    department = ma.Nested("DepartmentSchema", only=("id", "name"))
-    url = ma.Hyperlinks(
-        {
-            "self": ma.URLFor("patientbyid", values=dict(patient_id="<id>")),
-            "collection": ma.URLFor("patients"),
-        }
-    )
-
-
-patient_schema = PatientSchema()
-patients_schema = PatientSchema(many=True)
 
 
 # --------------------
@@ -316,13 +286,29 @@ class PatientDetail(Resource):
 
 class Hospitals(Resource):
     def get(self):
-        hospitals = Hospital.query.all()
-        return make_response(hospitals_schema.dump(hospitals), 200)
+        user = User.query.get(session.get("user_id"))
+        if not user:
+            return {"error": "401: Unauthorized"}, 401
+        
+        if not user.hospitals:
+            return make_response([], 200)
+        
+        hospitals = []
+        for hospital in user.hospitals:
+            patients = Patient.query.filter_by(
+                hospital_id=hospital.id, user_id=user.id
+            ).all()
+            hospital_data = hospital_schema.dump(hospital)
+            hospital_data["patients"] = patients_schema.dump(patients)
+            hospitals.append(hospital_data)
+        
+        return make_response(hospitals, 200)
 
     def post(self):
         data = request.get_json()
         new_hospital = Hospital(
-            name=data.get("name"), phone_number=data.get("phone_number")
+            name=data.get("name"),
+            phone_number=data.get("phone_number")
         )
         db.session.add(new_hospital)
         db.session.commit()
@@ -383,8 +369,23 @@ class HospitalDetail(Resource):
 
 class Departments(Resource):
     def get(self):
-        departments = Department.query.all()
-        return make_response(departments_schema.dump(departments), 200)
+        user = User.query.get(session.get("user_id"))
+        if not user:
+            return {"error": "401: Unauthorized"}, 401
+        
+        if not user.departments:
+            return make_response([], 200)
+        
+        departments = []
+        for department in user.departments:
+            patients = Patient.query.filter_by(
+                department_id=department.id, user_id=user.id
+            ).all()
+            department_data = department_schema.dump(department)
+            department_data["patients"] = patients_schema.dump(patients)
+            departments.append(department_data)
+        
+        return make_response(departments, 200)
 
     def post(self):
         data = request.get_json()

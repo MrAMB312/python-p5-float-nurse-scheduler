@@ -63,37 +63,40 @@ function HospitalForm() {
   };
 
   return (
-    <form onSubmit={formik.handleSubmit}>
-      <h2>Add Hospital</h2>
+    <div className="container">
+      <div className="card">
+        <h2>Add Hospital</h2>
+        <form onSubmit={formik.handleSubmit}>
+          <label>
+            Name:
+            <input
+              name="name"
+              placeholder="Hospital Name"
+              value={formik.values.name}
+              onChange={formik.handleChange}
+            />
+          </label>
+          {formik.errors.name && <p className="error">{formik.errors.name}</p>}
 
-      <label>
-        Name:
-        <input
-          name="name"
-          placeholder="Hospital Name"
-          value={formik.values.name}
-          onChange={formik.handleChange}
-        />
-      </label>
-      {formik.errors.name && <p className="error">{formik.errors.name}</p>}
+          <label>
+            Phone Number:
+            <input
+              name="phone_number"
+              value={formik.values.phone_number}
+              onChange={handlePhoneChange}
+              placeholder="(123) 456-7890"
+            />
+          </label>
+          {formik.errors.phone_number && <p className="error">{formik.errors.phone_number}</p>}
 
-      <label>
-        Phone Number:
-        <input
-          name="phone_number"
-          value={formik.values.phone_number}
-          onChange={handlePhoneChange}
-          placeholder="(123) 456-7890"
-        />
-      </label>
-      {formik.errors.phone_number && <p className="error">{formik.errors.phone_number}</p>}
-
-      <button type="submit">Add Hospital</button>
-      <br />
-      <button type="button" onClick={() => navigate("/")}>
-        Back to Home
-      </button>
-    </form>
+          <button type="submit">Add Hospital</button>
+          <br />
+          <button type="button" onClick={() => navigate("/")}>
+            Back to Home
+          </button>
+        </form>
+      </div>
+    </div>
   );
 }
 

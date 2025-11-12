@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from "react";
+import React, { useState, useContext } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/user";
 import { useFormik } from "formik";
@@ -8,9 +8,10 @@ function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user } = useContext(UserContext);
-  const [patient, setPatient] = useState(null);
+  const { user, hospitals, departments, patients, setPatients } = useContext(UserContext);
   const [showEditForm, setShowEditForm] = useState(false);
+
+  const patient = patients.find((p) => p.id === parseInt(id));
 
   const handleBack = () => {
     if (location.state?.from) {
@@ -23,12 +24,16 @@ function PatientDetail() {
   const formSchema = yup.object().shape({
     name: yup.string().required("Name is required").max(50),
     date_of_birth: yup.date().required("Date of birth is required"),
+    hospital_id: yup.number().required("Hospital is required"),
+    department_id: yup.number().required("Department is required"),
   });
 
   const formik = useFormik({
     initialValues: {
       name: "",
       date_of_birth: "",
+      hospital_id: "",
+      department_id: "",
     },
     validationSchema: formSchema,
     onSubmit: (values) => {
@@ -41,27 +46,13 @@ function PatientDetail() {
         .then((r) => r.json())
         .then((data) => {
           alert(`Patient updated: ${data.name}`);
-          setPatient(data);
+          setPatients((prev) =>
+            prev.map((p) => (p.id === data.id ? data : p))
+          );
           setShowEditForm(false);
         });
     },
   });
-
-  useEffect(() => {
-    if (user) {
-      fetch(`http://localhost:5555/patients/${id}`, {
-        credentials: "include",
-      })
-        .then((r) => r.json())
-        .then((data) => {
-          setPatient(data);
-          formik.setValues({
-            name: data.name || "",
-            date_of_birth: data.date_of_birth || "",
-          });
-        });
-    }
-  }, [id, user, formik]);
 
   const handleDelete = () => {
     fetch(`http://localhost:5555/patients/${id}`, {
@@ -69,12 +60,13 @@ function PatientDetail() {
       credentials: "include",
     }).then(() => {
       alert("Patient deleted");
+      setPatients((prev) => prev.filter((p) => p.id !== parseInt(id)));
       navigate("/");
     });
   };
 
   if (!user) return <p className="container card">Please log in to see patient details.</p>;
-  if (!patient) return <p className="container card">Loading patient data...</p>;
+  if (!patient) return <p className="container card">Patient not found.</p>;
 
   return (
     <div className="container">
@@ -103,6 +95,7 @@ function PatientDetail() {
                 Name:
                 <input
                   name="name"
+                  placeholder="Patient Name"
                   onChange={formik.handleChange}
                   value={formik.values.name}
                 />
@@ -119,6 +112,36 @@ function PatientDetail() {
                 />
               </label>
               {formik.errors.date_of_birth && <p className="error">{formik.errors.date_of_birth}</p>}
+
+              <label>
+                Hospital:
+                <select
+                  name="hospital_id"
+                  onChange={formik.handleChange}
+                  value={formik.values.hospital_id}
+                >
+                  <option value="">Select Hospital</option>
+                  {hospitals.map((h) => (
+                    <option key={h.id} value={h.id}>{h.name}</option>
+                  ))}
+                </select>
+              </label>
+              {formik.errors.hospital_id && <p className="error">{formik.errors.hospital_id}</p>}
+
+              <label>
+                Department:
+                <select
+                  name="department_id"
+                  onChange={formik.handleChange}
+                  value={formik.values.department_id}
+                >
+                  <option value="">Select Department</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </label>
+              {formik.errors.department_id && <p className="error">{formik.errors.department_id}</p>}
 
               <button type="submit">Update</button>
               <br />
