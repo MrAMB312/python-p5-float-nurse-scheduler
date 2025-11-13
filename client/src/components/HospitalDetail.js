@@ -4,14 +4,32 @@ import { UserContext } from "../context/user";
 
 function HospitalDetail() {
   const { id } = useParams();
-  const { user, hospitals } = useContext(UserContext);
+  const { user } = useContext(UserContext);
   const navigate = useNavigate();
 
-  if (!user) return <p className="container card">Please log in to see patients.</p>;
+  if (!user) return (
+    <div className="container">
+      <div className="card">
+        <p>Please log in to see patients.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  )
 
-  const hospital = (hospitals || []).find((h) => h.id === parseInt(id));
+  const hospital = (user.hospitals || []).find((h) => h.id === parseInt(id));
 
-  if (!hospital) return <p className="container card">Hospital not found.</p>;
+  if (!hospital) return (
+    <div className="container">
+      <div className="card">
+        <p>Hospital not found.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  )
 
   const patients = hospital.patients || [];
 

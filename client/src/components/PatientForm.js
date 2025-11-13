@@ -5,7 +5,7 @@ import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 
 function PatientForm() {
-  const { user, setUser, hospitals, departments, fetchHospitals, fetchDepartments } =
+  const { user, hospitals, departments, fetchHospitals, fetchDepartments, addPatientToUser } =
     useContext(UserContext);
   const navigate = useNavigate();
 
@@ -16,11 +16,9 @@ function PatientForm() {
   const [newDepartmentName, setNewDepartmentName] = useState("");
 
   useEffect(() => {
-    if (user) {
-      if (hospitals.length === 0) fetchHospitals();
-      if (departments.length === 0) fetchDepartments();
-    }
-  }, [user, hospitals, departments, fetchHospitals, fetchDepartments]);
+    if (!hospitals.length) fetchHospitals();
+    if (!departments.length) fetchDepartments();
+  }, [hospitals.length, departments.length, fetchHospitals, fetchDepartments]);
 
   const formSchema = yup.object().shape({
     name: yup.string().required("Name is required").max(50),
@@ -47,25 +45,11 @@ function PatientForm() {
         .then((r) => r.json())
         .then((newPatient) => {
           alert(`Patient ${newPatient.name} added!`);
-
-          const updatedHospitals = user.hospitals.map((h) =>
-            h.id === newPatient.hospital.id
-              ? { ...h, patients: [...(h.patients || []), newPatient] }
-              : h
-          );
-
-          const updatedDepartments = user.departments.map((d) => 
-            d.id === newPatient.department.id
-              ? { ...d, patients: [...(d.patients || []), newPatient] }
-              : d
-          );
-
-          setUser({ ...user, hospitals: updatedHospitals, departments: updatedDepartments });
-
+          addPatientToUser(newPatient);
           resetForm();
           navigate("/");
         })
-        .catch((err) => console.error("Failed to find patient:", err));
+        .catch((err) => console.error("Failed to add patient:", err));
     },
   });
 
@@ -79,7 +63,6 @@ function PatientForm() {
       .then((r) => r.json())
       .then((h) => {
         alert(`Hospital "${h.name}" added!`);
-        fetchHospitals();
         setNewHospitalName("");
         setNewHospitalPhone("");
         setShowHospitalForm(false);
@@ -98,7 +81,6 @@ function PatientForm() {
       .then((r) => r.json())
       .then((d) => {
         alert(`Department "${d.name}" added!`);
-        fetchDepartments();
         setNewDepartmentName("");
         setShowDepartmentForm(false);
         formik.setFieldValue("department_id", d.id);
@@ -106,7 +88,16 @@ function PatientForm() {
       .catch((err) => console.error(err));
   };
 
-  if (!user) return <p className="container card">Please log in to add patients.</p>;
+  if (!user) return (
+    <div className="container">
+      <div className="card">
+        <p>Please log in to add patients.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="container">

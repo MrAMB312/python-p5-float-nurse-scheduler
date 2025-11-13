@@ -17,12 +17,12 @@ function App() {
       <Router>
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/add-patient" element={<PatientForm />} />
+          <Route path="/patients/new" element={<PatientForm />} />
           <Route path="/patients/:id" element={<PatientDetail />} />
-          <Route path="/add-hospital" element={<HospitalForm />} />
+          <Route path="/hospitals/new" element={<HospitalForm />} />
           <Route path="/hospitals" element={<Hospitals />} />
           <Route path="/hospitals/:id" element={<HospitalDetail />} />
-          <Route path="/add-department" element={<DepartmentForm />} />
+          <Route path="/departments/new" element={<DepartmentForm />} />
           <Route path="/departments" element={<Departments />} />
           <Route path="/departments/:id" element={<DepartmentDetail />} />
         </Routes>

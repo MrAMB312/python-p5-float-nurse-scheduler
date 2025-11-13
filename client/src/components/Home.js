@@ -1,12 +1,21 @@
-import React, { useContext, useState } from "react";
+import React, { useContext, useState, useEffect } from "react";
 import { UserContext } from "../context/user";
 import { Link } from "react-router-dom";
 import Login from "./Login";
 import Signup from "./Signup";
 
 function Home() {
-  const { user, setUser } = useContext(UserContext);
+  const { user, setUser, fetchHospitals, fetchDepartments } = useContext(UserContext);
   const [selectedForm, setSelectedForm] = useState(null);
+
+  useEffect(() => {
+    if (user?.hospitals?.length === 0) {
+      fetchHospitals();
+    }
+    if (user?.departments?.length === 0) {
+      fetchDepartments();
+    }
+  }, [user?.hospitals, user?.departments, fetchHospitals, fetchDepartments]);
 
   const handleLogout = () => {
     fetch("http://localhost:5555/logout", {
@@ -51,7 +60,7 @@ function Home() {
         <p>View patients by hospital or department. Add new patients, hospitals, or departments.</p>
         <nav>
           <ul>
-            <li><Link to="/add-patient">Add Patient</Link></li>
+            <li><Link to="/patients/new">Add Patient</Link></li>
             <li><Link to="/hospitals">View Hospitals</Link></li>
             <li><Link to="/departments">View Departments</Link></li>
           </ul>

@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { UserContext } from "../context/user";
 import { useFormik } from "formik";
@@ -8,19 +8,26 @@ function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, hospitals, departments, patients, setPatients } = useContext(UserContext);
+  const { user, hospitals, departments } = useContext(UserContext);
+  
+  const [patient, setPatient] = useState(null)
   const [showEditForm, setShowEditForm] = useState(false);
-
-  const patient = patients.find((p) => p.id === parseInt(id));
-
-  const handleBack = () => {
-    if (location.state?.from) {
-      navigate(location.state.from);
-    } else {
-      navigate("/");
+  
+  useEffect(() => {
+    if (user) {
+      fetch(`http://localhost:5555/patients/${id}`, { credentials: "include" })
+      .then((r) => {
+        if (!r.ok) throw new Error("Patient not found");
+        return r.json();
+      })
+      .then((data) => setPatient(data))
+      .catch((err) => {
+        console.error(err);
+        setPatient(null);
+      });
     }
-  };
-
+  }, [id, user]);
+  
   const formSchema = yup.object().shape({
     name: yup.string().required("Name is required").max(50),
     date_of_birth: yup.date().required("Date of birth is required"),
@@ -29,11 +36,12 @@ function PatientDetail() {
   });
 
   const formik = useFormik({
+    enableReinitialize: true,
     initialValues: {
-      name: "",
-      date_of_birth: "",
-      hospital_id: "",
-      department_id: "",
+      name: patient?.name || "",
+      date_of_birth: patient?.date_of_birth || "",
+      hospital_id: patient?.hospital?.id || "",
+      department_id: patient?.department?.id || "",
     },
     validationSchema: formSchema,
     onSubmit: (values) => {
@@ -46,9 +54,7 @@ function PatientDetail() {
         .then((r) => r.json())
         .then((data) => {
           alert(`Patient updated: ${data.name}`);
-          setPatients((prev) =>
-            prev.map((p) => (p.id === data.id ? data : p))
-          );
+          setPatient(data);
           setShowEditForm(false);
         });
     },
@@ -60,13 +66,39 @@ function PatientDetail() {
       credentials: "include",
     }).then(() => {
       alert("Patient deleted");
-      setPatients((prev) => prev.filter((p) => p.id !== parseInt(id)));
       navigate("/");
     });
   };
 
-  if (!user) return <p className="container card">Please log in to see patient details.</p>;
-  if (!patient) return <p className="container card">Patient not found.</p>;
+  const handleBack = () => {
+    if (location.state?.from) {
+      navigate(location.state.from);
+    } else {
+      navigate("/");
+    }
+  };
+
+  if (!user) return (
+    <div className="container">
+      <div className="card">
+        <p>Please log in to see patient details.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  )
+
+  if (!patient) return (
+    <div className="container">
+      <div className="card">
+        <p>Patient not found.</p>
+        <button type="button" onClick={() => navigate("/")}>
+          Back to Home
+        </button>
+      </div>
+    </div>
+  )
 
   return (
     <div className="container">

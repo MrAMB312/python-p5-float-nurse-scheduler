@@ -25,6 +25,18 @@ class UserSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     name = ma.auto_field()
 
+    patients = ma.Nested("PatientSchema", many=True)
+    hospitals = ma.Method("get_hospitals")
+    departments = ma.Method("get_departments")
+
+    def get_hospitals(self, user):
+        unique = {p.hospital.id: p.hospital for p in user.patients if p.hospital}
+        return hospitals_schema.dump(list(unique.values()))
+    
+    def get_departments(self, user):
+        unique = {p.department.id: p.department for p in user.patients if p.department}
+        return departments_schema.dump(list(unique.values()))
+
 
 user_schema = UserSchema()
 users_schema = UserSchema(many=True)
@@ -54,6 +66,7 @@ class HospitalSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     name = ma.auto_field()
     phone_number = ma.auto_field()
+    patients = ma.Nested("PatientSchema", many=True, exclude=("hospital",))
 
 
 hospital_schema = HospitalSchema()
@@ -67,6 +80,7 @@ class DepartmentSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
+    patients = ma.Nested("PatientSchema", many=True, exclude=("department",))
 
 
 department_schema = DepartmentSchema()
@@ -286,23 +300,8 @@ class PatientDetail(Resource):
 
 class Hospitals(Resource):
     def get(self):
-        user = User.query.get(session.get("user_id"))
-        if not user:
-            return {"error": "401: Unauthorized"}, 401
-        
-        if not user.hospitals:
-            return make_response([], 200)
-        
-        hospitals = []
-        for hospital in user.hospitals:
-            patients = Patient.query.filter_by(
-                hospital_id=hospital.id, user_id=user.id
-            ).all()
-            hospital_data = hospital_schema.dump(hospital)
-            hospital_data["patients"] = patients_schema.dump(patients)
-            hospitals.append(hospital_data)
-        
-        return make_response(hospitals, 200)
+        hospitals = Hospital.query.all()
+        return make_response(hospitals_schema.dump(hospitals), 200)
 
     def post(self):
         data = request.get_json()
@@ -361,6 +360,16 @@ class HospitalDetail(Resource):
         db.session.delete(hospital)
         db.session.commit()
         return make_response("", 204)
+    
+
+class HospitalPatients(Resource):
+    def get(self, hospital_id):
+        user = User.query.get(session.get("user_id"))
+        if not user:
+            return {"error": "401: Unauthorized"}, 401
+
+        patients = Patient.query.filter_by(hospital_id=hospital_id, user_id=user.id).all()
+        return make_response(patients_schema.dump(patients), 200)
 
 
 # --------------------
@@ -369,23 +378,8 @@ class HospitalDetail(Resource):
 
 class Departments(Resource):
     def get(self):
-        user = User.query.get(session.get("user_id"))
-        if not user:
-            return {"error": "401: Unauthorized"}, 401
-        
-        if not user.departments:
-            return make_response([], 200)
-        
-        departments = []
-        for department in user.departments:
-            patients = Patient.query.filter_by(
-                department_id=department.id, user_id=user.id
-            ).all()
-            department_data = department_schema.dump(department)
-            department_data["patients"] = patients_schema.dump(patients)
-            departments.append(department_data)
-        
-        return make_response(departments, 200)
+        departments = Department.query.all()
+        return make_response(departments_schema.dump(departments), 200)
 
     def post(self):
         data = request.get_json()
@@ -441,6 +435,16 @@ class DepartmentDetail(Resource):
         db.session.delete(department)
         db.session.commit()
         return make_response("", 204)
+    
+    
+class DepartmentPatients(Resource):
+    def get(self, department_id):
+        user = User.query.get(session.get("user_id"))
+        if not user:
+            return {"error": "401: Unauthorized"}, 401
+
+        patients = Patient.query.filter_by(department_id=department_id, user_id=user.id).all()
+        return make_response(patients_schema.dump(patients), 200)
 
 
 # --------------------
@@ -476,9 +480,11 @@ api.add_resource(PatientDetail, "/patients/<int:patient_id>", endpoint="patientb
 
 api.add_resource(Hospitals, "/hospitals")
 api.add_resource(HospitalDetail, "/hospitals/<int:hospital_id>", endpoint="hospitalbyid")
+api.add_resource(HospitalPatients, "/hospitals/<int:hospital_id>/patients")
 
 api.add_resource(Departments, "/departments")
 api.add_resource(DepartmentDetail, "/departments/<int:department_id>", endpoint="departmentbyid")
+api.add_resource(DepartmentPatients, "/departments/<int:department_id>/patients")
 
 api.add_resource(Users, "/users", endpoint="users")
 api.add_resource(UserDetail, "/users/<int:user_id>", endpoint="userbyid")

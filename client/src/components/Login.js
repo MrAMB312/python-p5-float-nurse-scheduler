@@ -4,7 +4,7 @@ import * as yup from "yup";
 import { UserContext } from "../context/user";
 
 function Login() {
-  const { setUser } = useContext(UserContext);
+  const { setUser, setHospitals, setDepartments } = useContext(UserContext);
 
   const loginSchema = yup.object().shape({
     name: yup.string().required("Username is required"),
@@ -24,12 +24,20 @@ function Login() {
         credentials: "include",
         body: JSON.stringify(values),
       })
-        .then((r) => r.json())
+        .then((r) => {
+          if (!r.ok) throw new Error("Login failed");
+          return r.json();
+        })
         .then((data) => {
           if (data.error) {
             alert(data.error);
           } else {
-            setUser(data);
+            setUser({
+              id: data.id,
+              name: data.name
+            })
+            setHospitals(data.hospitals || []);
+            setDepartments(data.departments || []);
             alert(`Logged in as ${data.name}`);
             resetForm();
           }
