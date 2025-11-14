@@ -6,24 +6,20 @@ function Departments() {
   const { user, fetchDepartments } = useContext(UserContext);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    if (user?.departments?.length === 0) {
-      fetchDepartments();
-    }
-  }, [user?.departments, fetchDepartments]);
+  useEffect(() => { if (user) fetchDepartments(); }, [user, fetchDepartments]);
 
   if (!user) return (
     <div className="container">
       <div className="card">
         <p>Please log in to see departments.</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Back to Home
-        </button>
+        <button onClick={() => navigate("/")}>Back to Home</button>
       </div>
     </div>
-  )
+  );
 
-  const userDepartments = user.departments || [];
+  const userDepartments = Array.from(
+    new Map((user.patients || []).map(p => [p.department.id, p.department])).values()
+  );
 
   return (
     <div className="container">
@@ -31,7 +27,7 @@ function Departments() {
         <h2>Departments</h2>
         <ul>
           {userDepartments.length ? (
-            userDepartments.map((d) => (
+            userDepartments.map(d => (
               <li key={d.id}>
                 <Link to={`/departments/${d.id}`}>{d.name}</Link>
               </li>
@@ -40,9 +36,7 @@ function Departments() {
             <li>No departments found for your patients.</li>
           )}
         </ul>
-        <button type="button" onClick={() => navigate("/")}>
-          Back to Home
-        </button>
+        <button onClick={() => navigate("/")}>Back to Home</button>
       </div>
     </div>
   );

@@ -6,46 +6,39 @@ function DepartmentDetail() {
   const { id } = useParams();
   const { user } = useContext(UserContext);
   const navigate = useNavigate();
+  const departmentId = parseInt(id);
 
   if (!user) return (
     <div className="container">
       <div className="card">
-        <p>Please log in to see patients.</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Back to Home
-        </button>
+        <p>Please log in to see department details.</p>
+        <button onClick={() => navigate("/")}>Back to Home</button>
       </div>
     </div>
-  )
+  );
 
-  const department = (user.departments || []).find((d) => d.id === parseInt(id));
-
+  const department = (user.departments || []).find(d => d.id === departmentId);
+  
   if (!department) return (
     <div className="container">
       <div className="card">
         <p>Department not found.</p>
-        <button type="button" onClick={() => navigate("/")}>
-          Back to Home
-        </button>
+        <button onClick={() => navigate("/")}>Back to Home</button>
       </div>
     </div>
-  )
-
-  const patients = department.patients || [];
+  );
+  
+  const patients = (user.patients || []).filter(p => p.department.id === departmentId);
 
   return (
     <div className="container">
       <div className="card">
         <h2>Patients Managed by Department of {department.name}</h2>
-
         {patients.length ? (
           <ul>
-            {patients.map((p) => (
+            {patients.map(p => (
               <li key={p.id}>
-                <Link
-                  to={`/patients/${p.id}`}
-                  state={{ from: `/departments/${id}` }}
-                >
+                <Link to={`/patients/${p.id}`} state={{ from: `/departments/${id}` }}>
                   {p.name} ({p.date_of_birth})
                 </Link>
               </li>
@@ -54,10 +47,7 @@ function DepartmentDetail() {
         ) : (
           <p>No patients found for this department.</p>
         )}
-
-        <button type="button" onClick={() => navigate("/departments")}>
-          Back to Departments
-        </button>
+        <button onClick={() => navigate("/departments")}>Back to Departments</button>
       </div>
     </div>
   );

@@ -30,12 +30,28 @@ class UserSchema(ma.SQLAlchemySchema):
     departments = ma.Method("get_departments")
 
     def get_hospitals(self, user):
-        unique = {p.hospital.id: p.hospital for p in user.patients if p.hospital}
-        return hospitals_schema.dump(list(unique.values()))
+        hospitals_data = []
+        unique_hospitals = {p.hospital.id: p.hospital for p in user.patients if p.hospital}
+
+        for hospital in unique_hospitals.values():
+            user_patients = [p for p in hospital.patients if p.user_id == user.id]
+            hospital_dict = hospital_schema.dump(hospital)
+            hospital_dict["patients"] = patients_schema.dump(user_patients)
+            hospitals_data.append(hospital_dict)
+
+        return hospitals_data
     
     def get_departments(self, user):
-        unique = {p.department.id: p.department for p in user.patients if p.department}
-        return departments_schema.dump(list(unique.values()))
+        departments_data = []
+        unique_departments = {p.department.id: p.department for p in user.patients if p.department}
+
+        for department in unique_departments.values():
+            user_patients = [p for p in department.patients if p.user_id == user.id]
+            department_dict = department_schema.dump(department)
+            department_dict["patients"] = patients_schema.dump(user_patients)
+            departments_data.append(department_dict)
+
+        return departments_data
 
 
 user_schema = UserSchema()
@@ -66,7 +82,6 @@ class HospitalSchema(ma.SQLAlchemySchema):
     id = ma.auto_field()
     name = ma.auto_field()
     phone_number = ma.auto_field()
-    patients = ma.Nested("PatientSchema", many=True, exclude=("hospital",))
 
 
 hospital_schema = HospitalSchema()
@@ -80,7 +95,6 @@ class DepartmentSchema(ma.SQLAlchemySchema):
 
     id = ma.auto_field()
     name = ma.auto_field()
-    patients = ma.Nested("PatientSchema", many=True, exclude=("department",))
 
 
 department_schema = DepartmentSchema()

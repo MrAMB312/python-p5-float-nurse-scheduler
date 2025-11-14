@@ -25,24 +25,29 @@ function Login() {
         body: JSON.stringify(values),
       })
         .then((r) => {
-          if (!r.ok) throw new Error("Login failed");
-          return r.json();
+          return r.json().then((payload) => {
+            if (!r.ok) {
+              throw new Error(payload.error || "Login failed");
+            }
+            return payload;
+          });
         })
         .then((data) => {
-          if (data.error) {
-            alert(data.error);
-          } else {
-            setUser({
-              id: data.id,
-              name: data.name
-            })
-            setHospitals(data.hospitals || []);
-            setDepartments(data.departments || []);
-            alert(`Logged in as ${data.name}`);
-            resetForm();
-          }
+          setUser({
+            id: data.id,
+            name: data.name,
+            hospitals: data.hospitals || [],
+            departments: data.departments || [],
+            patients: data.patients || [],
+          });
+          setHospitals(data.hospitals || []);
+          setDepartments(data.departments || []);
+          alert(`Logged in as ${data.name}`);
+          resetForm();
         })
-        .catch((err) => console.error(err));
+        .catch((err) => {
+          alert(err.message);
+        });
     },
   });
 

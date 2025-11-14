@@ -8,7 +8,7 @@ function PatientDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, hospitals, departments } = useContext(UserContext);
+  const { user, hospitals, departments, removePatientFromUser } = useContext(UserContext);
   
   const [patient, setPatient] = useState(null)
   const [showEditForm, setShowEditForm] = useState(false);
@@ -64,11 +64,29 @@ function PatientDetail() {
     fetch(`http://localhost:5555/patients/${id}`, {
       method: "DELETE",
       credentials: "include",
-    }).then(() => {
-      alert("Patient deleted");
-      navigate("/");
-    });
+    })
+      .then(async (r) => {
+        if (!r.ok) throw new Error("Failed to delete patient");
+
+        const contentType = r.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          return r.json();
+        } else {
+          return {};
+        }
+      })
+      .then(() => {
+        removePatientFromUser(parseInt(id));
+        setPatient(null);
+        alert("Patient deleted");
+        navigate("/");
+      })
+      .catch((err) => {
+        console.error(err);
+        alert("Error deleting patient. Check console for details.");
+      });
   };
+
 
   const handleBack = () => {
     if (location.state?.from) {

@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import { UserContext } from "../context/user";
 import { Link } from "react-router-dom";
 import Login from "./Login";
@@ -9,13 +9,11 @@ function Home() {
   const [selectedForm, setSelectedForm] = useState(null);
 
   useEffect(() => {
-    if (user?.hospitals?.length === 0) {
+    if (user) {
       fetchHospitals();
-    }
-    if (user?.departments?.length === 0) {
       fetchDepartments();
     }
-  }, [user?.hospitals, user?.departments, fetchHospitals, fetchDepartments]);
+  }, [user, fetchHospitals, fetchDepartments]);
 
   const handleLogout = () => {
     fetch("http://localhost:5555/logout", {
@@ -33,7 +31,6 @@ function Home() {
           <h1>Welcome to the Nurse Scheduler!</h1>
           <p>Please log in or sign up to continue.</p>
           <br />
-
           {!selectedForm && (
             <div>
               <button onClick={() => setSelectedForm("login")}>Log In</button>
@@ -41,13 +38,9 @@ function Home() {
               <button onClick={() => setSelectedForm("signup")}>Sign Up</button>
             </div>
           )}
-
           {selectedForm === "login" && <Login />}
           {selectedForm === "signup" && <Signup />}
-
-          {selectedForm && (
-            <button onClick={() => setSelectedForm(null)}>Back</button>
-          )}
+          {selectedForm && <button onClick={() => setSelectedForm(null)}>Back</button>}
         </div>
       </div>
     );
@@ -65,7 +58,6 @@ function Home() {
             <li><Link to="/departments">View Departments</Link></li>
           </ul>
         </nav>
-
         <button onClick={handleLogout}>Log Out</button>
       </div>
     </div>

@@ -5,8 +5,17 @@ import * as yup from "yup";
 import { useNavigate } from "react-router-dom";
 
 function PatientForm() {
-  const { user, hospitals, departments, fetchHospitals, fetchDepartments, addPatientToUser } =
-    useContext(UserContext);
+  const {
+    user,
+    hospitals,
+    departments,
+    fetchHospitals,
+    fetchDepartments,
+    addPatientToUser,
+    addHospitalToUser,
+    addDepartmentToUser,
+  } = useContext(UserContext);
+
   const navigate = useNavigate();
 
   const [showHospitalForm, setShowHospitalForm] = useState(false);
@@ -15,6 +24,7 @@ function PatientForm() {
   const [newHospitalPhone, setNewHospitalPhone] = useState("");
   const [newDepartmentName, setNewDepartmentName] = useState("");
 
+  // Load global dropdown options if empty
   useEffect(() => {
     if (!hospitals.length) fetchHospitals();
     if (!departments.length) fetchDepartments();
@@ -45,7 +55,11 @@ function PatientForm() {
         .then((r) => r.json())
         .then((newPatient) => {
           alert(`Patient ${newPatient.name} added!`);
+          // Add patient to user-specific arrays
           addPatientToUser(newPatient);
+          // Ensure hospital/department exist in global arrays (for dropdowns)
+          addHospitalToUser(newPatient.hospital);
+          addDepartmentToUser(newPatient.department);
           resetForm();
           navigate("/");
         })
@@ -67,6 +81,7 @@ function PatientForm() {
         setNewHospitalPhone("");
         setShowHospitalForm(false);
         formik.setFieldValue("hospital_id", h.id);
+        addHospitalToUser(h); // sync global and user arrays
       })
       .catch((err) => console.error(err));
   };
@@ -84,6 +99,7 @@ function PatientForm() {
         setNewDepartmentName("");
         setShowDepartmentForm(false);
         formik.setFieldValue("department_id", d.id);
+        addDepartmentToUser(d); // sync global and user arrays
       })
       .catch((err) => console.error(err));
   };
@@ -97,7 +113,7 @@ function PatientForm() {
         </button>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="container">
@@ -125,9 +141,7 @@ function PatientForm() {
               onChange={formik.handleChange}
             />
           </label>
-          {formik.errors.date_of_birth && (
-            <p className="error">{formik.errors.date_of_birth}</p>
-          )}
+          {formik.errors.date_of_birth && <p className="error">{formik.errors.date_of_birth}</p>}
 
           <label>
             Hospital:
@@ -153,9 +167,7 @@ function PatientForm() {
               >
                 <option value="">Select Hospital</option>
                 {hospitals.map((h) => (
-                  <option key={h.id} value={h.id}>
-                    {h.name}
-                  </option>
+                  <option key={h.id} value={h.id}>{h.name}</option>
                 ))}
               </select>
             )}
@@ -163,9 +175,7 @@ function PatientForm() {
               {showHospitalForm ? "Cancel" : "Add New Hospital"}
             </button>
           </label>
-          {formik.errors.hospital_id && (
-            <p className="error">{formik.errors.hospital_id}</p>
-          )}
+          {formik.errors.hospital_id && <p className="error">{formik.errors.hospital_id}</p>}
 
           <label>
             Department:
@@ -186,27 +196,20 @@ function PatientForm() {
               >
                 <option value="">Select Department</option>
                 {departments.map((d) => (
-                  <option key={d.id} value={d.id}>
-                    {d.name}
-                  </option>
+                  <option key={d.id} value={d.id}>{d.name}</option>
                 ))}
               </select>
             )}
-
             <button type="button" onClick={() => setShowDepartmentForm(!showDepartmentForm)}>
               {showDepartmentForm ? "Cancel" : "Add New Department"}
             </button>
           </label>
-          {formik.errors.department_id && (
-            <p className="error">{formik.errors.department_id}</p>
-          )}
-          <br />
+          {formik.errors.department_id && <p className="error">{formik.errors.department_id}</p>}
 
+          <br />
           <button type="submit">Add Patient</button>
           <br />
-          <button type="button" onClick={() => navigate("/")}>
-            Back to Home
-          </button>
+          <button type="button" onClick={() => navigate("/")}>Back to Home</button>
         </form>
       </div>
     </div>
